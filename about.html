@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>About - PhantomWords</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-content">
+            <div class="header-top-row">
+                <div class="logo">
+                    <a href="index.html" style="text-decoration: none; color: inherit;">
+                        <h1>PhantomWords</h1>
+                        <p class="subtitle">The Unwritten Dictionary / 書かれざる辞書</p>
+                    </a>
+                </div>
+                <nav class="header-nav-links">
+                    <a href="about.html"><strong>About</strong></a>
+                    <a href="setting.html">Setting</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main id="main-content" class="static-page">
+        <h1>About PhantomWords</h1>
+        
+        <section>
+            <h2>The Unwritten Dictionary / 書かれざる辞書</h2>
+            <p>
+                PhantomWordsは、まだ誰も知らない「幻の言葉」を発見し、収集するためのプロジェクトです。
+            </p>
+            <p>
+                ここに掲載されている単語と定義は、すべてアルゴリズムによって自動生成されたものです。それらは実在しませんが、どこかに存在していてもおかしくないような、不思議な響きと意味を持っています。この辞書をめくることで、あなたの創造性が少しでも刺激されれば幸いです。
+            </p>
+        </section>
+
+        <section>
+            <h2>How It Works / 仕組み</h2>
+            <p>
+                この辞書は、<strong>マルコフ連鎖 (Markov Chain)</strong> という確率モデルを基盤技術として利用しています。
+            </p>
+            
+            <h3>1. 単語の生成 (Word Generation)</h3>
+            <p>
+                まず、約10万語が収録された古い英語の辞書データ（Webster's 1913 Unabridged Dictionary）を学習します。アルゴリズムは、単語の綴りに見られる文字の並びのパターンを記憶し、「この文字の次には、どの文字が来やすいか」を確率的に予測します。この連鎖を繰り返すことで、元の辞書に似た響きを持つ、まったく新しい単語（造語）が生まれます。
+            </p>
+            
+            <h3>2. 定義文の生成 (Definition Generation)</h3>
+            <p>
+                次に、生成された造語にふさわしい「それっぽい」定義文を作成します。これもマルコフ連鎖を利用しますが、今度は文字単位ではなく単語単位で行います。辞書に収録されているすべての定義文を学習したモデルが、文法的に自然で、かつ辞書らしい文体の新しい文章を紡ぎ出します。
+            </p>
+            
+            <h3>3. 翻訳 (Translation)</h3>
+            <p>
+                生成された英語の定義文は、Google Apps Script (GAS) を利用して構築した独自のAPIエンドポイントを通じて、日本語に翻訳されています。これにより、サーバー費用をかけることなく、安全に翻訳機能を提供しています。
+            </p>
+        </section>
+
+        <section>
+            <h2>Credits / クレジット</h2>
+            <p>
+                このプロジェクトは、以下の素晴らしいデータとライブラリの上に成り立っています。
+            </p>
+            <ul>
+                <li><strong>Dictionary Data:</strong> Webster's Unabridged Dictionary (1913) provided by the Project Gutenberg.</li>
+                <li><strong>Pull-to-Refresh:</strong> <a href="https://github.com/BoxFactura/pulltorefresh.js" target="_blank" rel="noopener">pulltorefresh.js</a></li>
+
+                <li><strong>Developed by:</strong> 或いは夜 (<a href="https://github.com/AruihaYoru" target="_blank" rel="noopener">GitHub</a>)</li>
+            </ul>
+        </section>
+        
+        <a href="index.html" class="back-link">← Back to Dictionary</a>
+    </main>
+
+    <!-- index.htmlと共通のフッター -->
+    <footer class="site-footer">
+        <p>&copy; 2026 PhantomWords Project. All words and definitions are algorithmically generated.</p>
+        <p><a href="[あなたのGitHubリポジトリのURL]" target="_blank">View on GitHub</a></p>
+    </footer>
+
+</body>
+</html>

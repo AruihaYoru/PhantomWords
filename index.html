@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>PhantomWords - The Unwritten Dictionary</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/pulltorefreshjs@0.1.22/dist/index.umd.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="header-content">
+            <div class="header-top-row">
+                <div class="logo">
+                    <h1>PhantomWords</h1>
+                    <p class="subtitle">The Unwritten Dictionary / 書かれざる辞書</p>
+                </div>
+                <nav class="header-nav-links">
+                    <a href="#">About</a>
+                    <!-- <a href="setting.html">Setting</a> -->
+                </nav>
+            </div>
+
+            <div class="search-wrapper">
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Explore the lexical frontier..." autocomplete="off">
+                    <button id="search-button">Search</button>
+                </div>
+				
+                <div class="suggestions-container">
+                    <ul id="suggestions-list" style="display: none;"></ul>
+                </div>
+            </div>
+			
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div id="word-list-container">
+            <div class="loader" id="loader">
+                <p>Discovering new words from the void...</p>
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </main>
+    
+	
+    <div id="infinite-loader" class="loader" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+	
+    <div id="scroll-trigger"></div>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 PhantomWords Project. All words and definitions are algorithmically generated.</p>
+        <p><a href="https://github.com/AruihaYoru/PhantomWords" target="_blank">View on GitHub</a></p>
+    </footer>
+
+    <script src="js/main.js" type="module" defer></script>
+</body>
+</html>

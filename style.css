@@ -1,0 +1,449 @@
+/* ================================================================
+   Global Styles & Variables
+   ================================================================ */
+:root {
+    --font-primary: 'Noto Sans JP', sans-serif;
+    --color-text: #2c3e50; /* 濃いグレー */
+    --color-text-light: #7f8c8d; /* 薄いグレー */
+    --color-background: #f8f9fa; /* わずかにグレーがかった白 */
+    --color-surface: #ffffff; /* カードなどの表面色 */
+    --color-border: #e9ecef; /* 境界線 */
+    --color-accent: #3498db; /* アクセントカラー */
+    --header-height: 120px;
+}
+
+body {
+    font-family: var(--font-primary);
+    background-color: var(--color-background);
+    color: var(--color-text);
+    margin: 0;
+    line-height: 1.7;
+}
+
+
+/* ================================================================
+   Header & Navigation
+   ================================================================ */
+.site-header {
+    background-color: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: var(--header-height);
+}
+
+.logo h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.logo .subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-light);
+    margin: 0;
+    margin-top: -5px;
+}
+
+.header-nav-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.header-nav-links a {
+    text-decoration: none;
+    color: var(--color-text);
+    font-weight: 700;
+    transition: color 0.2s ease;
+}
+
+.header-nav-links a:hover {
+    color: var(--color-accent);
+}
+
+.search-container {
+    display: flex;
+    min-width: 300px;
+}
+
+#search-input {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px 0 0 4px;
+    font-family: var(--font-primary);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#search-button {
+    border: 1px solid var(--color-accent);
+    background-color: var(--color-accent);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    font-weight: 700;
+    transition: background-color 0.2s ease;
+}
+
+#search-button:hover {
+    background-color: #2980b9;
+}
+
+
+/* ================================================================
+   Search Suggestions
+   ================================================================ */
+.search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 450px;
+}
+
+#suggestions-list {
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    z-index: 99;
+    max-height: 250px;
+    overflow-y: auto;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+#suggestions-list li {
+    padding: 0.8rem 1rem;
+    cursor: pointer;
+}
+
+#suggestions-list li:hover {
+    background-color: #f1f3f5;
+}
+
+/* ================================================================
+   Main Content & Word List
+   ================================================================ */
+#main-content {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 0 2rem;
+}
+
+#word-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.word-card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 1.5rem 2rem;
+    transition: box-shadow 0.3s ease;
+}
+
+.word-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+
+.word-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.word {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.definition .original-def {
+    font-style: italic;
+    color: var(--color-text-light);
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.definition .translated-def {
+    font-size: 1.1rem;
+    margin-bottom: 0;
+}
+
+.definition .translated-def.loading::after {
+    content: '...';
+    display: inline-block;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+
+/* ================================================================
+   Loader & Scroll Trigger
+   ================================================================ */
+.loader {
+    text-align: center;
+    padding: 3rem;
+    color: var(--color-text-light);
+}
+
+.spinner {
+    border: 4px solid rgba(0,0,0,0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: var(--color-text);
+    animation: spin 1s ease infinite;
+    margin: 1rem auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#scroll-trigger {
+    height: 50px;
+}
+
+
+/* ================================================================
+   Footer
+   ================================================================ */
+.site-footer {
+    text-align: center;
+    padding: 2rem;
+    margin-top: 4rem;
+    border-top: 1px solid var(--color-border);
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+}
+
+.site-footer p {
+    margin: 0.5rem 0;
+}
+
+.site-footer a {
+    color: var(--color-text-light);
+    font-weight: 700;
+}
+
+
+/* ================================================================
+   Responsive Design
+   ================================================================ */
+@media (max-width: 768px) {
+    .site-header {
+        height: auto;
+        padding: 1rem;
+    }
+
+    /* PCでは横一列だったのを、モバイルでは縦に並べる */
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        height: auto;
+    }
+
+    /* --- 上段: ロゴとリンク --- */
+    .header-top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+
+    .logo h1 {
+        font-size: 1.5rem;
+    }
+    
+    .logo .subtitle {
+        display: none; /* 狭い画面ではサブタイトルを非表示に */
+    }
+
+    .header-nav-links {
+        display: flex;
+        gap: 1.2rem;
+    }
+
+    .header-nav-links a {
+        font-size: 1rem;
+    }
+    
+    /* --- 下段: 検索バー --- */
+    .search-container {
+        width: 100%;
+        min-width: 0;
+    }
+    
+    #search-input {
+        flex-grow: 1;
+    }
+    .search-wrapper {
+        max-width: none;
+    }
+
+    
+
+    /* サジェストリストの親をheader-contentに再設定 */
+    .header-content {
+        position: relative;
+    }
+
+    /* --- メインコンテンツ --- */
+    #main-content {
+        margin-top: 1.5rem;
+        padding: 0 1rem;
+    }
+
+    .word {
+        font-size: 1.6rem;
+    }
+}
+
+
+
+/* ================================================================
+   Share Button & Feedback
+   ================================================================ */
+
+.share-button {
+    background: none;
+    border: none;
+    color: var(--color-text-light);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    position: relative;
+    margin-left: 1rem; 
+}
+
+.share-button:hover {
+    background-color: #f1f3f5;
+    color: var(--color-accent);
+}
+
+.share-button svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+}
+
+.share-feedback {
+    position: absolute;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 101;
+    animation: fadeInOut 2s ease-in-out;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateX(-50%) translateY(5px); }
+    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-5px); }
+}
+
+/* ================================================================
+   Static Pages (About, Setting)
+   ================================================================ */
+.static-page {
+    max-width: 800px;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2rem 3rem;
+    margin-bottom: 3rem;
+}
+
+.static-page h1 {
+    font-size: 2.5rem;
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.static-page h2 {
+    font-size: 1.8rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.static-page p, .static-page li {
+    font-size: 1.05rem;
+    line-height: 1.8;
+}
+
+.static-page ul {
+    list-style-type: disc;
+    padding-left: 25px;
+}
+
+.static-page a {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-weight: 600;
+}
+.static-page a:hover {
+    text-decoration: underline;
+}
+
+.static-page .back-link {
+    display: inline-block;
+    margin-top: 3rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* モバイル表示用の調整 */
+@media (max-width: 768px) {
+    .static-page {
+        padding: 1.5rem;
+    }
+    .static-page h1 {
+        font-size: 2rem;
+    }
+    .static-page h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* ここらへんはやけくそAI */
