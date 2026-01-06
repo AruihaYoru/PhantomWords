@@ -72,3 +72,19 @@ function showFeedback(element, message) {
         feedback.remove();
     }, 2000);
 }
+
+
+// -------------------------------------------------------------------------------
+
+/* ちょーちょーちょーじゅうよう！！！
+
+cd /c/Users/Mecat/Documents/github/PhantomWords
+git add .
+git commit -m "ここに詳細を入力"
+git push
+
+*/
+
+// -------------------------------------------------------------------------------
+
+
