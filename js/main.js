@@ -1,11 +1,10 @@
 // js/main.js
 
 import { CharMarkovGenerator, WordMarkovGenerator } from './markov.js';
-import { addShareButton } from './share.js'; 
+import { addShareButton } from './share.js';  
 
-// 翻訳用
-const GAS_TRANSLATE_URL = 'https://script.google.com/macros/s/AKfycbxT28JWhJC3tuNzJeQz8M2pBUhI-f18hwwX2x8oDyDm0JNWNUD7VzWsIUpMJmCDcMmupA/exec';
-// 勝手に使ったら怒っちゃうぞ！
+const GAS_TRANSLATE_URL = 'https://script.google.com/macros/s/AKfycbwWfi0AHnbu3El2UCejFLYbPqyl-gUThcKevKOvO2dN20wG4YTAs-F6CnJqiZZbl4POtQ/exec';
+// 勝手に使ったら怒っちゃうぞ！！
 
 // --- DOM Elements ---
 const wordListContainer = document.getElementById('word-list-container');
@@ -24,6 +23,11 @@ let isLoading = false;
 let generatedQueue = [];
 const QUEUE_TARGET_SIZE = 15;
 let debounceTimer;
+let currentSearchPrefix = '';
+
+// 整形用データ
+let nameList = [];
+let labelList = [];
 
 // =================================================================
 //  メインロジック (Entry Point)
@@ -31,15 +35,13 @@ let debounceTimer;
 if (wordListContainer) {
     initialize();
 }
-
-/**
- * アプリケーションの初期化 (二段階読み込み)
- */
 async function initialize() {
     try {
         if (loader) loader.style.display = 'block';
 
-        console.log("Phase 1: Starting with lite database...");
+        await loadFormattingData(); 
+        console.log("Formatting data loaded:", {names: nameList.length, labels: labelList.length});
+		
         const lite_response = await fetch('./db/markov_db_lite.json');
         if (!lite_response.ok) throw new Error('Lite database could not be loaded.');
         const lite_database = await lite_response.json();
@@ -50,14 +52,11 @@ async function initialize() {
         const lite_allDefinitions = lite_database.map(entry => entry.definition);
         globalDefinitionGenerator = new WordMarkovGenerator(lite_allDefinitions, 2);
 
-        console.log("Main: Lite generators are ready!");
         addEventListeners();
         initializePullToRefresh();
         
         await generateAndDisplayInitialWords(5);
-        console.log("Phase 1: Initial words displayed.");
 
-        console.log("Phase 2: Starting background upgrade to full models...");
         upgradeModelsInBackground();
 
     } catch (error) {
@@ -67,98 +66,170 @@ async function initialize() {
 }
 
 /**
- * バックグラウンドで完全版のモデルを構築し、準備ができたら差し替える
+ * 外部の整形ルールファイルを読み込む
  */
-async function upgradeModelsInBackground() {
+async function loadFormattingData() {
     try {
-        const full_response = await fetch('./db/markov_db.json');
-        database = await full_response.json();
+        const [namesText, labelsText] = await Promise.all([
+            fetch('./db/beautify/name.txt').then(res => res.text()),
+            fetch('./db/beautify/label.txt').then(res => res.text())
+        ]);
+        nameList = namesText.split(/\r?\n/).map(s => s.trim()).filter(s => s);
+        labelList = labelsText.split(/\r?\n/).map(s => s.trim()).filter(s => s);
+    } catch (e) {
+        console.error("Formatting files load failed", e);
+    }
+}
 
-        const worker = new Worker('./js/worker.js');
-        const full_allWords = database.map(entry => entry.word.toLowerCase());
-        worker.postMessage(full_allWords);
+/**
+ * 辞書風整形アルゴリズム
+ */
+function beautify(text) {
+    if (!text) return "";
+    let html = text;
 
-        worker.onmessage = (e) => {
-            const fullWordGenerator = new CharMarkovGenerator([], 3);
-            fullWordGenerator.transitions = e.data.transitions;
-            fullWordGenerator.startStates = e.data.startStates;
-            wordGenerator = fullWordGenerator;
-            console.log("Background Upgrade: Full Word Generator is ready!");
-        };
+    // ★ 改行を <br> に変換（最重要）
+    html = html.replace(/\r?\n/g, '<br>');
+
+    // A. 【改行】 (a) や i, ii などの前で改行
+    html = html.replace(/(\([a-z]\)|\bi+\b)/gi, '<br>$1');
+
+    // B. 【イニシャル・名前】 指定の5パターンを透明度 0.2 に
+    // 正規表現で一気に処理（長いパターンから順にマッチさせる）
+    const nameRegex = /([Ss]ir\s[A-Z]\.\s[A-Z][a-z]+|Sir\s[A-Z]\.\s[A-Z]\.|Sir\s[A-Z]\.|[A-Z]\.\s[A-Z]\.|\b[A-Z][A-Z]\.|\b[A-Z]\.)/g;
+    html = html.replace(nameRegex, '<span style="opacity: 0.2;">$1</span>');
+
+    // C. 【ラベル】 label.txt の中身があれば bold + italic
+    // 翻訳されてカッコが全角「（）」になっていても反応するように対応
+    labelList.forEach(label => {
+        // label.txt の内容をエスケープ
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        // 半角・全角両方のカッコに対応する正規表現
+        const labelPattern = escaped.replace('\\(', '[\\(（]').replace('\\)', '[\\)）]');
+        const regex = new RegExp(`(${labelPattern})`, 'g');
         
-        const full_allDefinitions = database.map(entry => entry.definition);
-        globalDefinitionGenerator = new WordMarkovGenerator(full_allDefinitions, 2);
-        console.log("Background Upgrade: Full Definition Generator is ready!");
+        html = html.replace(regex, '<i><b>$1</b></i>');
+    });
 
+    return html;
+}
+
+// =================================================================
+//  データフェッチ & 表示
+// =================================================================
+
+async function fetchTranslation(englishText) {
+    const requestUrl = `${GAS_TRANSLATE_URL}?q=${encodeURIComponent(englishText)}&_=${Date.now()}`;
+    try {
+        const response = await fetch(requestUrl);
+        if (!response.ok) return null;
+        return await response.json(); 
     } catch (error) {
-        console.error("Background model upgrade failed:", error);
+        console.error("Translation error:", error);
+        return null;
     }
 }
 
+function createWordCard(word, definitionEn, definitionJa) {
+    const card = document.createElement('article');
+    card.className = 'word-card';
+    
+    const beautifulEn = beautify(definitionEn);
+    const beautifulJa = beautify(definitionJa);
 
-// =================================================================
-//  イベントリスナー設定
-// =================================================================
-function addEventListeners() {
-    if (searchButton) searchButton.addEventListener('click', handleSearch);
-    if (searchInput) {
-        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSearch(); });
-        searchInput.addEventListener('input', handleSuggest);
-        searchInput.addEventListener('blur', () => { setTimeout(() => { if (suggestionsList) suggestionsList.style.display = 'none' }, 150); });
-    }
-    if (scrollTrigger) {
-        const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting && !isLoading) {
-                handleInfiniteScroll();
-            }
-        });
-        observer.observe(scrollTrigger);
-    }
+    card.innerHTML = `
+        <div class="word-header">
+            <h2 class="word">${word}</h2>
+        </div>
+        <div class="definition">
+            <p class="original-def">${beautifulEn}</p>
+            <p class="translated-def">${beautifulJa}</p> 
+        </div>
+    `;
+    return card;
 }
 
-function initializePullToRefresh() {
-    if (window.PullToRefresh) {
-        PullToRefresh.init({
-            mainElement: 'body',
-            onRefresh: () => {
-                wordListContainer.innerHTML = '';
-                generatedQueue = [];
-                initialize();
-            }
-        });
-    }
-}
-
-// =================================================================
-//  単語生成 & 表示ロジック
-// =================================================================
 async function generateAndDisplayInitialWords(count) {
     const promises = [];
     for (let i = 0; i < count; i++) {
         const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12 });
         const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        
-        const promise = fetchTranslation(newDef).then(translatedDef => {
-            if (translatedDef) return { word: newWord, definition: newDef, translated: translatedDef };
-            return null;
-        });
-        promises.push(promise);
+        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
     }
-    const initialWords = await Promise.all(promises);
-    
-    initialWords.forEach(item => {
+    const results = await Promise.all(promises);
+    results.forEach(item => {
         if (item) {
-            const wordCard = createWordCard(item.word, item.definition);
-            wordListContainer.appendChild(wordCard);
-            const translatedElement = wordCard.querySelector('.translated-def');
-            translatedElement.textContent = item.translated;
-            translatedElement.classList.remove('loading');
-			
-            addShareButton(wordCard, item.word, item.definition, item.translated);
+            const card = createWordCard(item.word, item.en, item.ja);
+            wordListContainer.appendChild(card);
+            addShareButton(card, item.word, item.en, item.ja);
         }
     });
     if (loader) loader.style.display = 'none';
     fillQueueIfNeeded();
+}
+
+function displayWordsFromQueue(count) {
+    const items = generatedQueue.splice(0, count);
+    items.forEach(item => {
+        const card = createWordCard(item.word, item.en, item.ja);
+        wordListContainer.appendChild(card);
+        addShareButton(card, item.word, item.en, item.ja);
+    });
+    fillQueueIfNeeded();
+}
+
+async function fillQueueIfNeeded() {
+    if (isLoading || generatedQueue.length >= QUEUE_TARGET_SIZE) return;
+    isLoading = true;
+    const promises = [];
+    for (let i = 0; i < QUEUE_TARGET_SIZE - generatedQueue.length; i++) {
+        const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12, prefix: currentSearchPrefix });
+        const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
+        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
+    }
+    const results = await Promise.all(promises);
+    results.forEach(item => { if (item) generatedQueue.push(item); });
+    isLoading = false;
+}
+
+// =================================================================
+//  その他のユーティリティ (検索・無限スクロール等)
+// =================================================================
+
+async function handleSearch() {
+    const prefix = searchInput.value.trim().toLowerCase();
+    currentSearchPrefix = prefix;
+    generatedQueue = [];
+    wordListContainer.innerHTML = '';
+    if (loader) loader.style.display = 'block';
+
+    const promises = [];
+    for (let i = 0; i < 5; i++) {
+        const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12, prefix });
+        const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
+        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
+    }
+    const results = await Promise.all(promises);
+    results.forEach(item => {
+        if (item) {
+            const card = createWordCard(item.word, item.en, item.ja);
+            wordListContainer.appendChild(card);
+            addShareButton(card, item.word, item.en, item.ja);
+        }
+    });
+    if (loader) loader.style.display = 'none';
+}
+
+function addEventListeners() {
+    if (searchButton) searchButton.addEventListener('click', handleSearch);
+    if (searchInput) {
+        searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSearch(); });
+    }
+    if (scrollTrigger) {
+        new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !isLoading) handleInfiniteScroll();
+        }).observe(scrollTrigger);
+    }
 }
 
 async function handleInfiniteScroll() {
@@ -170,130 +241,26 @@ async function handleInfiniteScroll() {
     displayWordsFromQueue(5);
 }
 
-async function fillQueueIfNeeded() {
-    if (isLoading || generatedQueue.length >= QUEUE_TARGET_SIZE) return;
-    isLoading = true;
-
-    const promises = [];
-    const itemsToGenerate = QUEUE_TARGET_SIZE - generatedQueue.length;
-    for (let i = 0; i < itemsToGenerate; i++) {
-        const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12 });
-        const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        const promise = fetchTranslation(newDef).then(translatedDef => {
-            if (translatedDef) return { word: newWord, definition: newDef, translated: translatedDef };
-            return null;
-        });
-        promises.push(promise);
+function initializePullToRefresh() {
+    if (window.PullToRefresh) {
+        PullToRefresh.init({ mainElement: 'body', onRefresh: () => location.reload() });
     }
-    const results = await Promise.all(promises);
-    results.forEach(item => { if (item) generatedQueue.push(item); });
-    isLoading = false;
 }
 
-async function fetchTranslation(englishText) {
-    const requestUrl = `${GAS_TRANSLATE_URL}?q=${encodeURIComponent(englishText)}`;
+async function upgradeModelsInBackground() {
     try {
-        const response = await fetch(requestUrl);
-        if (!response.ok) return "Translation failed.";
-        const data = await response.json();
-        return data.translated;
+        const full_response = await fetch('./db/markov_db.json');
+        database = await full_response.json();
+        const worker = new Worker('./js/worker.js');
+        worker.postMessage(database.map(entry => entry.word.toLowerCase()));
+        worker.onmessage = (e) => {
+            const fullWordGenerator = new CharMarkovGenerator([], 3);
+            fullWordGenerator.transitions = e.data.transitions;
+            fullWordGenerator.startStates = e.data.startStates;
+            wordGenerator = fullWordGenerator;
+        };
+        globalDefinitionGenerator = new WordMarkovGenerator(database.map(entry => entry.definition), 2);
     } catch (error) {
-        console.error("Translation error:", error);
-        return "Translation failed.";
+        console.error("Background upgrade failed:", error);
     }
-}
-
-function displayWordsFromQueue(count) {
-    const wordsToDisplay = generatedQueue.splice(0, count);
-    for (const item of wordsToDisplay) {
-        const wordCard = createWordCard(item.word, item.definition);
-        wordListContainer.appendChild(wordCard);
-        
-        const translatedElement = wordCard.querySelector('.translated-def');
-        translatedElement.textContent = item.translated;
-        translatedElement.classList.remove('loading');
-
-        addShareButton(wordCard, item.word, item.definition, item.translated);
-    }
-    if (generatedQueue.length < QUEUE_TARGET_SIZE) {
-        fillQueueIfNeeded();
-    }
-}
-
-function createWordCard(word, definition) {
-    const card = document.createElement('article');
-    card.className = 'word-card';
-    card.innerHTML = `
-        <div class="word-header">
-            <h2 class="word">${word}</h2>
-        </div>
-        <div class="definition">
-            <p class="original-def">${definition}</p>
-            <p class="translated-def loading"></p> 
-        </div>
-    `;
-    return card;
-}
-
-// =================================================================
-//  検索 & サジェストロジック
-// =================================================================
-async function handleSearch() {
-    const prefix = searchInput.value.trim().toLowerCase();
-    if (prefix.length < 2 || !wordGenerator) return;
-
-    wordListContainer.innerHTML = '';
-    if (loader) loader.style.display = 'block';
-
-    const promises = [];
-    for (let i = 0; i < 5; i++) {
-        const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12, prefix });
-        const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        promises.push(fetchTranslation(newDef).then(translatedDef => ({ word: newWord, definition: newDef, translated: translatedDef })));
-    }
-    const results = await Promise.all(promises);
-    results.forEach(item => {
-        const wordCard = createWordCard(item.word, item.definition);
-        wordListContainer.appendChild(wordCard);
-        const translatedElement = wordCard.querySelector('.translated-def');
-        translatedElement.textContent = item.translated;
-        translatedElement.classList.remove('loading');
-    });
-    
-    if (loader) loader.style.display = 'none';
-    searchInput.value = '';
-}
-
-function handleSuggest(e) {
-    const prefix = e.target.value.trim().toLowerCase();
-    if (!suggestionsList || !database) return;
-    suggestionsList.innerHTML = '';
-    
-    if (prefix.length < 2) {
-        suggestionsList.style.display = 'none';
-        return;
-    }
-
-    clearTimeout(debounceTimer);
-    suggestionsList.innerHTML = '<li><i>Searching...</i></li>';
-    suggestionsList.style.display = 'block';
-
-    debounceTimer = setTimeout(() => {
-        const matches = database.filter(entry => entry.word.toLowerCase().startsWith(prefix)).slice(0, 5);
-        suggestionsList.innerHTML = '';
-        if (matches.length > 0) {
-            matches.forEach(match => {
-                const li = document.createElement('li');
-                li.textContent = match.word;
-                li.addEventListener('click', () => {
-                    searchInput.value = match.word;
-                    suggestionsList.style.display = 'none';
-                    handleSearch();
-                });
-                suggestionsList.appendChild(li);
-            });
-        } else {
-            suggestionsList.innerHTML = '<li>No matches found.</li>';
-        }
-    }, 300);
 }

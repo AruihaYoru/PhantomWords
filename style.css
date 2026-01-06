@@ -447,3 +447,35 @@ body {
 }
 
 /* ここらへんはやけくそAI */
+
+/* 出名ラベル: 箱ではなく、細字のイタリック＋下線程度にする */
+.word-source {
+    display: inline;
+    font-style: italic;
+    color: #666;
+    background-color: transparent; /* 背景色を消す */
+    border-bottom: 1px dotted #ccc; /* 下の点線のみ残す */
+    padding: 0 2px;
+    font-size: 0.95em;
+}
+
+/* 専門分野マーカー: 背景を薄くし、フォントをセリフ体に */
+.dict-marker {
+    display: inline-block;
+    background-color: #f0f0f0; /* 濃い紺から薄いグレーへ */
+    color: #333;
+    border: 1px solid #ccc;
+    padding: 0px 4px;
+    border-radius: 2px;
+    font-size: 0.85em;
+    font-weight: bold;
+    font-family: "Times New Roman", serif;
+    margin: 2px 4px;
+}
+
+/* 学名: 綺麗に斜体にするだけ */
+.scientific-name {
+    font-style: italic;
+    color: #444;
+    font-family: serif;
+}

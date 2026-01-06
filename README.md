@@ -66,7 +66,7 @@
 
 ## 🙏 Acknowledgements / 謝辞
 
-*   **Dictionary Data:** [Project Gutenberg](https://www.gutenberg.org/)
+*   **Dictionary Data:** [WebstersEnglishDictionary](https://github.com/matthewreagan/WebstersEnglishDictionary)
 *   **Pull-to-Refresh Library:** [pulltorefresh.js](https://github.com/BoxFactura/pulltorefresh.js)
 
 ---

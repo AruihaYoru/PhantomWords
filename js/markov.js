@@ -29,7 +29,7 @@ export class CharMarkovGenerator {
     }
 
     generate(options = {}) {
-        const { minLength = 5, maxLength = 12, prefix = '' } = options;
+        const { minLength = 5, maxLength = 30, prefix = '' } = options;
 
         let currentState;
         if (prefix && prefix.length >= this.order) {
