@@ -2,9 +2,10 @@
 
 import { CharMarkovGenerator, WordMarkovGenerator } from './markov.js';
 import { addShareButton } from './share.js';  
+import { fetchTranslation, getTranslationConfig } from './translate.js';
 
-const GAS_TRANSLATE_URL = 'https://script.google.com/macros/s/AKfycbwWfi0AHnbu3El2UCejFLYbPqyl-gUThcKevKOvO2dN20wG4YTAs-F6CnJqiZZbl4POtQ/exec';
-// 勝手に使ったら怒っちゃうぞ！！
+// --- Configuration (Config) ---
+const CONFIG_KEY = 'phantom_words_cfg';
 
 // --- DOM Elements ---
 const wordListContainer = document.getElementById('word-list-container');
@@ -13,7 +14,6 @@ const infiniteLoader = document.getElementById('infinite-loader');
 const searchInput = document.getElementById('search-input');
 const searchButton = document.getElementById('search-button');
 const scrollTrigger = document.getElementById('scroll-trigger');
-const suggestionsList = document.getElementById('suggestions-list');
 
 // --- Global Variables ---
 let wordGenerator;
@@ -22,7 +22,6 @@ let database;
 let isLoading = false;
 let generatedQueue = [];
 const QUEUE_TARGET_SIZE = 15;
-let debounceTimer;
 let currentSearchPrefix = '';
 
 // 整形用データ
@@ -35,28 +34,41 @@ let labelList = [];
 if (wordListContainer) {
     initialize();
 }
+
 async function initialize() {
     try {
         if (loader) loader.style.display = 'block';
 
+        // 設定UIの初期化
+        initConfigUI();
+
+        // 人名・ラベルデータの読み込み
         await loadFormattingData(); 
         console.log("Formatting data loaded:", {names: nameList.length, labels: labelList.length});
 		
+        // 軽量データベースの読み込み
         const lite_response = await fetch('./db/markov_db_lite.json');
         if (!lite_response.ok) throw new Error('Lite database could not be loaded.');
         const lite_database = await lite_response.json();
         
+        // マルコフ生成器の初期化
         const lite_allWords = lite_database.map(entry => entry.word.toLowerCase());
         wordGenerator = new CharMarkovGenerator(lite_allWords, 3);
 
         const lite_allDefinitions = lite_database.map(entry => entry.definition);
         globalDefinitionGenerator = new WordMarkovGenerator(lite_allDefinitions, 2);
 
+        // イベント設定
         addEventListeners();
         initializePullToRefresh();
         
+        // 共有された単語がある場合は、まずそれを最上位に表示する
+        handleSharedWordFromUrl();
+
+        // 初期ワードの生成と表示
         await generateAndDisplayInitialWords(5);
 
+        // バックグラウンドでフルモデルにアップグレード
         upgradeModelsInBackground();
 
     } catch (error) {
@@ -67,6 +79,7 @@ async function initialize() {
 
 /**
  * 外部の整形ルールファイルを読み込む
+ * 空白行やトリミングを徹底し、置換優先順位のために「長い順」にソートしておく
  */
 async function loadFormattingData() {
     try {
@@ -74,12 +87,44 @@ async function loadFormattingData() {
             fetch('./db/beautify/name.txt').then(res => res.text()),
             fetch('./db/beautify/label.txt').then(res => res.text())
         ]);
-        nameList = namesText.split(/\r?\n/).map(s => s.trim()).filter(s => s);
-        labelList = labelsText.split(/\r?\n/).map(s => s.trim()).filter(s => s);
+
+        // 空行を除去し、長い文字列から順に並べる（部分一致による破壊を防ぐため）
+        nameList = namesText.split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(s => s !== "")
+            .sort((a, b) => b.length - a.length);
+
+        labelList = labelsText.split(/\r?\n/)
+            .map(s => s.trim())
+            .filter(s => s !== "")
+            .sort((a, b) => b.length - a.length);
+
+        console.log("Cleaned Formatting data:", { names: nameList.length, labels: labelList.length });
     } catch (e) {
         console.error("Formatting files load failed", e);
     }
 }
+
+/**
+ * 設定UI（ドロワー内のチェックボックス）の初期化
+ */
+function initConfigUI() {
+    const cfg = getTranslationConfig();
+    const keys = ['remConj', 'addPer', 'repSemi', 'names', 'labels'];
+    
+    keys.forEach(key => {
+        const el = document.getElementById(`cfg-${key}`);
+        if (!el) return;
+        el.checked = cfg[key];
+        el.addEventListener('change', () => {
+            const newCfg = getTranslationConfig();
+            newCfg[key] = el.checked;
+            localStorage.setItem(CONFIG_KEY, JSON.stringify(newCfg));
+            console.log(`Config updated: ${key} = ${el.checked}`);
+        });
+    });
+}
+
 
 /**
  * 辞書風整形アルゴリズム
@@ -88,47 +133,25 @@ function beautify(text) {
     if (!text) return "";
     let html = text;
 
-    // ★ 改行を <br> に変換（最重要）
     html = html.replace(/\r?\n/g, '<br>');
 
-    // A. 【改行】 (a) や i, ii などの前で改行
-    html = html.replace(/(\([a-z]\)|\bi+\b)/gi, '<br>$1');
-
-    // B. 【イニシャル・名前】 指定の5パターンを透明度 0.2 に
-    // 正規表現で一気に処理（長いパターンから順にマッチさせる）
-    const nameRegex = /([Ss]ir\s[A-Z]\.\s[A-Z][a-z]+|Sir\s[A-Z]\.\s[A-Z]\.|Sir\s[A-Z]\.|[A-Z]\.\s[A-Z]\.|\b[A-Z][A-Z]\.|\b[A-Z]\.)/g;
-    html = html.replace(nameRegex, '<span style="opacity: 0.2;">$1</span>');
-
-    // C. 【ラベル】 label.txt の中身があれば bold + italic
-    // 翻訳されてカッコが全角「（）」になっていても反応するように対応
     labelList.forEach(label => {
-        // label.txt の内容をエスケープ
         const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // 半角・全角両方のカッコに対応する正規表現
-        const labelPattern = escaped.replace('\\(', '[\\(（]').replace('\\)', '[\\)）]');
-        const regex = new RegExp(`(${labelPattern})`, 'g');
-        
-        html = html.replace(regex, '<i><b>$1</b></i>');
+        const regex = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'gu');
+        html = html.replace(regex, `<span class="dict-marker">$&</span>`);
+    });
+
+    nameList.forEach(name => {
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'gu');
+        html = html.replace(regex, `<span class="word-source">$&</span>`);
     });
 
     return html;
 }
-
 // =================================================================
 //  データフェッチ & 表示
 // =================================================================
-
-async function fetchTranslation(englishText) {
-    const requestUrl = `${GAS_TRANSLATE_URL}?q=${encodeURIComponent(englishText)}&_=${Date.now()}`;
-    try {
-        const response = await fetch(requestUrl);
-        if (!response.ok) return null;
-        return await response.json(); 
-    } catch (error) {
-        console.error("Translation error:", error);
-        return null;
-    }
-}
 
 function createWordCard(word, definitionEn, definitionJa) {
     const card = document.createElement('article');
@@ -149,12 +172,31 @@ function createWordCard(word, definitionEn, definitionJa) {
     return card;
 }
 
+/**
+ * URLパラメータをチェックし、共有された単語があればリスト最上位に表示
+ */
+function handleSharedWordFromUrl() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const word = urlParams.get('word');
+    const define = urlParams.get('define');   // 日本語
+    const english = urlParams.get('english'); // 英語
+
+    if (word && define && english) {
+        const card = createWordCard(word, english, define);
+        if (wordListContainer) {
+            wordListContainer.prepend(card); // リストの最上位に追加
+            addShareButton(card, word, english, define);
+            console.log("Shared word priority injection:", word);
+        }
+    }
+}
+
 async function generateAndDisplayInitialWords(count) {
     const promises = [];
     for (let i = 0; i < count; i++) {
         const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12 });
         const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
+        promises.push(fetchTranslation(newDef, nameList, labelList).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
     }
     const results = await Promise.all(promises);
     results.forEach(item => {
@@ -185,7 +227,7 @@ async function fillQueueIfNeeded() {
     for (let i = 0; i < QUEUE_TARGET_SIZE - generatedQueue.length; i++) {
         const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12, prefix: currentSearchPrefix });
         const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
+        promises.push(fetchTranslation(newDef, nameList, labelList).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
     }
     const results = await Promise.all(promises);
     results.forEach(item => { if (item) generatedQueue.push(item); });
@@ -207,7 +249,7 @@ async function handleSearch() {
     for (let i = 0; i < 5; i++) {
         const newWord = wordGenerator.generate({ minLength: 5, maxLength: 12, prefix });
         const newDef = globalDefinitionGenerator.generate({ maxWords: 20 });
-        promises.push(fetchTranslation(newDef).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
+        promises.push(fetchTranslation(newDef, nameList, labelList).then(res => res ? { word: newWord, en: res.original, ja: res.translated } : null));
     }
     const results = await Promise.all(promises);
     results.forEach(item => {
@@ -264,3 +306,16 @@ async function upgradeModelsInBackground() {
         console.error("Background upgrade failed:", error);
     }
 }
+
+// -------------------------------------------------------------------------------
+
+/* ちょーちょーちょーじゅうよう！！！
+
+cd "C:\Users\Mecat\Documents\github\PhantomWords"
+git add .
+git commit -m "ここに詳細を入力"
+git push
+
+*/
+
+// -------------------------------------------------------------------------------

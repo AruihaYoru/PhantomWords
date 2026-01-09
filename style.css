@@ -453,10 +453,10 @@ body {
     display: inline;
     font-style: italic;
     color: #666;
-    background-color: transparent; /* 背景色を消す */
-    border-bottom: 1px dotted #ccc; /* 下の点線のみ残す */
+    background-color: transparent;
     padding: 0 2px;
     font-size: 0.95em;
+	opacity: 0.2;
 }
 
 /* 専門分野マーカー: 背景を薄くし、フォントをセリフ体に */
@@ -478,4 +478,131 @@ body {
     font-style: italic;
     color: #444;
     font-family: serif;
+}
+
+/* ================================================================
+   Configuration Drawer & Overlay
+   ================================================================ */
+
+#config-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 900;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+/* 設定ドロワー本体 */
+#config-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 100vh;
+    background: var(--color-surface);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transform: translateX(260px);
+    transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#config-drawer:hover {
+    transform: translateX(0);
+}
+
+#config-drawer:hover ~ #config-overlay {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.drawer-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 40px;
+    height: 100%;
+    background-color: var(--color-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+}
+
+.drawer-handle span {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 0.9rem;
+    user-select: none;
+}
+
+.drawer-content {
+    padding: 3rem 1.5rem 3rem 55px;
+    height: 100%;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.drawer-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--color-accent);
+    display: inline-block;
+}
+
+.setting-item {
+    margin-bottom: 1.5rem;
+}
+
+.setting-item label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--color-text);
+    transition: color 0.2s ease;
+}
+
+.setting-item label:hover {
+    color: var(--color-accent);
+}
+
+.setting-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--color-accent); 
+}
+
+.config-hint {
+    margin-top: 3rem;
+    font-size: 0.75rem;
+    color: var(--color-text-light);
+    line-height: 1.4;
+    border-top: 1px solid var(--color-border);
+    padding-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    #config-drawer {
+        width: 260px;
+        transform: translateX(220px);
+    }
+
+    .drawer-content {
+        padding: 2rem 1rem 2rem 50px;
+    }
 }

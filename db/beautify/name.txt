@@ -1,59 +1,59 @@
 
-Sir C. Cornwallis
-Sir E. Dering
-Sir E. Forbes
-Sir E. Sandys
-Sir F. Beaufort
-Sir F. Drake
-Sir F. Palgrave
-Sir G. Buck
-Sir H. Davy
-Sir H. Hamilton
-Sir H. Sidney
-Sir H. Taylor
-Sir H. Wotton
-Sir I. Newton
-Sir J. Davies
-Sir J. Denham
-Sir J. Harrington
-Sir J. Hayward
-Sir J. Herschel
-Sir J. Lubbock
-Sir J. Mackintosh
-Sir J. Mandeville
-Sir J. Reynolds
-Sir J. Ross
-Sir J. Stephen
-Sir K. Digby
-Sir M. Hale
-Sir M. Halle
-Sir P. Pett
-Sir P. Sidney
-Sir R. Baker
-Sir R. Blackmore
-Sir R. Brown
-Sir R. Winwood
-Sir S. Baker
-Sir T. Brovne
-Sir T. Brown
-Sir T. Browne
-Sir T. Craig
-Sir T. Elyot
-Sir T. Herbert
-Sir T. Malory
-Sir T. Malroy
-Sir T. More
-Sir T. North
-Sir T. Raleigh
-Sir T. Scott
-Sir W. Hamilton
-Sir W. Jones
-Sir W. Petty
-Sir W. Raleigh
-Sir W. Scot
-Sir W. Scott
-Sir W. Temple
-Sir W. Thomson
+Sir C. Cornwallis.
+Sir E. Dering.
+Sir E. Forbes.
+Sir E. Sandys.
+Sir F. Beaufort.
+Sir F. Drake.
+Sir F. Palgrave.
+Sir G. Buck.
+Sir H. Davy.
+Sir H. Hamilton.
+Sir H. Sidney.
+Sir H. Taylor.
+Sir H. Wotton.
+Sir I. Newton.
+Sir J. Davies.
+Sir J. Denham.
+Sir J. Harrington.
+Sir J. Hayward.
+Sir J. Herschel.
+Sir J. Lubbock.
+Sir J. Mackintosh.
+Sir J. Mandeville.
+Sir J. Reynolds.
+Sir J. Ross.
+Sir J. Stephen.
+Sir K. Digby.
+Sir M. Hale.
+Sir M. Halle.
+Sir P. Pett.
+Sir P. Sidney.
+Sir R. Baker.
+Sir R. Blackmore.
+Sir R. Brown.
+Sir R. Winwood.
+Sir S. Baker.
+Sir T. Brovne.
+Sir T. Brown.
+Sir T. Browne.
+Sir T. Craig.
+Sir T. Elyot.
+Sir T. Herbert.
+Sir T. Malory.
+Sir T. Malroy.
+Sir T. More.
+Sir T. North.
+Sir T. Raleigh.
+Sir T. Scott.
+Sir W. Hamilton.
+Sir W. Jones.
+Sir W. Petty.
+Sir W. Raleigh.
+Sir W. Scot.
+Sir W. Scott.
+Sir W. Temple.
+Sir W. Thomson.
 
 Sir A.
 Sir B.
@@ -277,6 +277,7 @@ G.
 H.
 I.
 J.
+I.
 K.
 L.
 M.
@@ -294,5 +295,111 @@ X.
 Y.
 Z.
 
+A. Chalmers
+F. Potter.
+Shak.
+Russel.
+Macaulay.
+Chalmers.
+Newton.
+Travis.
+Bp.
+Milton.
+liberal.
+Cowper.
+Tennyson.
 
 
+サー・C・コーンウォリス
+サー・E・デリング
+サー・E・フォーブス
+サー・E・サンディス
+サー・F・ボーフォート
+サー・F・ドレイク
+サー・F・パルグレイブ
+サー・G・バック
+サー・H・デイビー
+サー・H・ハミルトン
+サー・H・シドニー
+サー・H・テイラー
+サー・H・ウォットン
+サー・I・ニュートン
+サー・J・デイヴィス
+サー・J・デナム
+サー・J・ハリントン
+サー・J・ヘイワード
+サー・J・ハーシェル
+サー・J・ラボック
+サー・J・マッキントッシュ
+サー・J・マンデヴィル
+サー・J・レイノルズ
+サー・J・ロス
+サー・J・スティーブン
+サー・K・ディグビー
+サー・M・ヘイル
+サー・M・ハレ
+サー・P・ペット
+サー・P・シドニー
+サー・R・ベイカー
+サー・R・ブラックモア
+サー・R・ブラウン
+サー・R・ウィンウッド
+サー・S・ベイカー
+サー・T・ブロヴネ
+サー・T・ブラウン
+サー・T・ブラウン
+サー・T・ブラウン
+サー・T・クレイグ
+サー・T・エリオット
+サー・T・ハーバート
+サー・T・マロリー
+サー・T・マルロイ
+サー・T・モア
+サー・T・ノース
+サー・T・ローリー
+サー・T・スコット
+サー・W・ハミルトン
+サー・W・ジョーンズ
+サー・W・ペティ
+サー・W・ローリー
+サー・W・スコット
+サー・W・スコット。
+サー・W・テンプル。
+サー・W・トムソン。
+
+サー A.
+サー B.
+サー C.
+サー D.
+サー E.
+サー F.
+サー G.
+サー H.
+サー I.
+サー J.
+サー K.
+サー L.
+サー M.
+サー P.
+サー R.
+サー S.
+サー T.
+サー W.
+
+サー G. C.
+サー R. S.
+サー T. E.
+サー W. O.
+サー W. R.
+
+A. チャーマーズ
+F. ポッター
+シェイク
+ラッセル
+マコーレー
+チャーマーズ
+ニュートン
+トラヴィス
+ミルトン
+カウパー
+テニスン
